@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Button } from 'react-bootstrap'
 import { Link } from 'react-router-dom'
-import { classRoster, weekdayIdFromDate, weekdayLabels } from '../data/schedule'
+import { classRoster, weekdayIdFromDate } from '../data/schedule'
 
 // Badge color for a class tag.
 function tagBadgeClass(tag) {
@@ -18,7 +18,7 @@ const [newName, setNewName] = useState('')
 const [search, setSearch] = useState('')
 // Standalone UI selections — these do not filter the attendance list.
 const [selectedInstructor, setSelectedInstructor] = useState('')
-const [classChoice, setClassChoice] = useState('')
+const [assistantInstructor, setAssistantInstructor] = useState('')
 const [noteText, setNoteText] = useState(note)
 const [noteSaved, setNoteSaved] = useState(false)
 useEffect(() => { setNoteText(note); setNoteSaved(false) }, [note, date])
@@ -66,41 +66,10 @@ return (
     />
     </div>
 
+
+    {/* STAGE 1 — shown once a date is chosen, before any class is selected. */}
     {date && (
-    <div className="mb-4">
-    <label className="form-label">{weekdayId ? `${weekdayLabels[weekdayId]} classes` : 'Classes'}</label>
-    {dayClasses.length === 0 ? (
-        <p className="text-muted">No classes scheduled for this day. Add classes in the Schedule tab.</p>
-    ) : (
-        <div className="list-group">
-        {dayClasses.map((cls) => (
-            <button
-                key={cls.id}
-                type="button"
-                className={`list-group-item list-group-item-action d-flex justify-content-between align-items-center gap-2 ${cls.id === selectedClassId ? 'active' : ''}`}
-                style={{ minHeight: '44px' }}
-                aria-pressed={cls.id === selectedClassId}
-                onClick={() => { setSelectedClassId(cls.id); setSavedMessage('') }}
-            >
-                <span>{cls.label} — {cls.time}</span>
-                {cls.tag && <span className={tagBadgeClass(cls.tag)}>{cls.tag}</span>}
-            </button>
-        ))}
-        </div>
-    )}
-    </div>
-    )}
-
-    {date && selectedClass && (
     <>
-        <h2 className="h5">
-            {selectedClass.label} — {selectedClass.time}
-            {selectedClass.tag && <span className={`${tagBadgeClass(selectedClass.tag)} ms-2`}>{selectedClass.tag}</span>}
-        </h2>
-        <p className="mb-3" aria-live="polite">
-        {presentStudents.length} of {students.length} students present
-        </p>
-
         {/* Instructor dropdown — standalone, does not filter the list.
             Placeholder options; wire to real instructor data later. */}
         <div className="mb-3">
@@ -112,28 +81,60 @@ return (
             onChange={(event) => setSelectedInstructor(event.target.value)}
         >
             <option value="">Select instructor</option>
-            <option value="Instructor 1">Instructor 1</option>
-            <option value="Instructor 2">Instructor 2</option>
-            <option value="Instructor 3">Instructor 3</option>
+            <option value="Shihan Michelle">Shihan Michelle</option>
+            <option value="Sensei Zelda">Sensei Zelda</option>
+            <option value="Sensei Diane">Sensei Diane</option>
+            <option value="Sensei David">Sensei David</option>
+            <option value="Senpai Maria">Senpai Maria</option>
+            <option value="Senpai Tak">Senpai Tak</option>
+            <option value="Senpai Khaing">Senpai Khaing</option>
+            <option value="Rachel">Rachel</option>
         </select>
         </div>
 
-        {/* Classes dropdown — standalone, does not filter the list.
-            Populated from the scheduled classes for the selected day. */}
+        {/* Class dropdown — selects the active class for the day.
+            Populated from the scheduled classes for the selected day.
+            No class is pre-selected: starts on a disabled placeholder. */}
         <div className="mb-3">
-        <label htmlFor="class-select" className="form-label">Classes</label>
+        <label htmlFor="class-select" className="form-label">Class</label>
         <select
             id="class-select"
             className="form-select"
-            value={classChoice}
-            onChange={(event) => setClassChoice(event.target.value)}
+            value={selectedClassId}
+            onChange={(event) => setSelectedClassId(event.target.value)}
         >
-            <option value="">Select class</option>
+            <option value="" disabled>Select class</option>
             {dayClasses.map((cls) => (
                 <option key={cls.id} value={cls.id}>{cls.label} — {cls.time}</option>
             ))}
         </select>
         </div>
+
+        {/* Assistant instructor — standalone free-text input, does not filter the list. */}
+        <div className="mb-3">
+        <label htmlFor="assistant-instructor" className="form-label">Assistant instructor</label>
+        <input
+            id="assistant-instructor"
+            type="text"
+            className="form-control"
+            placeholder="Assistant instructor"
+            value={assistantInstructor}
+            onChange={(event) => setAssistantInstructor(event.target.value)}
+        />
+        </div>
+    </>
+    )}
+
+    {/* STAGE 2 — shown once a class is selected: the roster and class-specific content. */}
+    {date && selectedClass && (
+    <>
+        <h2 className="h5">
+            {selectedClass.label} — {selectedClass.time}
+            {selectedClass.tag && <span className={`${tagBadgeClass(selectedClass.tag)} ms-2`}>{selectedClass.tag}</span>}
+        </h2>
+        <p className="mb-3" aria-live="polite">
+        {presentStudents.length} of {students.length} students present
+        </p>
 
         <div className="input-group mb-3" style={{ maxWidth: '260px' }}>
         
