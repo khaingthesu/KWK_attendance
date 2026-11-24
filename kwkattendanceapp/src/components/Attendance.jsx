@@ -12,6 +12,7 @@ function tagBadgeClass(tag) {
 
 function Attendance({ date, setDate, attendance, setDraft, saveAttendance, extras, addExtra, removeExtra, roster, note, saveNote, schedule, selectedClassId, setSelectedClassId }) {
 const [savedMessage, setSavedMessage] = useState('')
+const [saving, setSaving] = useState(false)
 const [newName, setNewName] = useState('')
 const [search, setSearch] = useState('')
 const [noteText, setNoteText] = useState(note)
@@ -24,6 +25,7 @@ useEffect(() => { setSearch('') }, [selectedClassId])
 
 const weekdayId = weekdayIdFromDate(date)
 const dayClasses = schedule[weekdayId] || []
+const markedClassCount = dayClasses.filter((cls) => attendance[`${date}/${cls.id}`]?.length).length
 const selectedClass = dayClasses.find((cls) => cls.id === selectedClassId) || null
 // Live combined roster for the selected class (from Firestore).
 const students = selectedClass ? classRoster(selectedClass, roster) : []
@@ -227,26 +229,40 @@ return (
             {noteSaved && <span role="status" className="ms-2 text-success">Saved</span>}
         </div>
 
-        <button
-            type="button"
-            className="btn btn-danger btn-lg w-100 mt-3"
-            disabled={presentStudents.length === 0}
-            onClick={() => {
-                if (saveAttendance(classMeta)) {
-                    setSavedMessage(`Saved ${selectedClass.label} at ${selectedClass.time} for ${date}. Choose this date in Reports to view it.`)
-                }
-            }}
-        >
-            Save Attendance
-        </button>
-        {savedMessage && <p role="status" className="mt-3">{savedMessage}</p>}
-        <Link to="/reports" className="d-inline-block mt-3">View Reports</Link>
-        <p className="text-muted mt-2">Attendance is saved and stays after refresh or sign out.</p>
-
     </>
     )
 : (
     <p className="text-muted">Select a date and a class to mark attendance.</p>
+    )}
+
+    {date && (
+    <div className="mt-4">
+        <p className="text-muted">Mark attendance throughout the day, then save all classes together when the day is finished.</p>
+        <p>{markedClassCount} {markedClassCount === 1 ? 'class' : 'classes'} with attendance for {date}.</p>
+        <button
+            type="button"
+            className="btn btn-danger btn-lg w-100 mt-3"
+            disabled={markedClassCount === 0 || saving}
+            onClick={async () => {
+                setSavedMessage('')
+                setSaving(true)
+                try {
+                    if (await saveAttendance()) {
+                        setSavedMessage(`Saved attendance for ${date}. Choose this date in Reports to view all classes.`)
+                    } else {
+                        setSavedMessage('Attendance was not saved. Please try again.')
+                    }
+                } finally {
+                    setSaving(false)
+                }
+            }}
+        >
+            {saving ? 'Saving…' : "Save Today’s Attendance"}
+        </button>
+        {savedMessage && <p role="status" className="mt-3">{savedMessage}</p>}
+        <Link to="/reports" className="d-inline-block mt-3">View Reports</Link>
+        <p className="text-muted mt-2">Your marks stay after refresh or sign out. Save today’s attendance to include all marked classes in Reports.</p>
+    </div>
     )}
 </section>
 )

@@ -1,5 +1,5 @@
-import { useState } from 'react'
 import { signInWithEmailAndPassword } from 'firebase/auth'
+import { useState } from 'react'
 import { auth } from '../firebase/firebase'
 
 function SignIn() {
@@ -28,7 +28,7 @@ return (
     <h1 className="h3">Instructor Sign In</h1>
     <form onSubmit={handleSubmit}>
     <div className="mb-3">
-        <label htmlFor="signin-email" className="form-label">Email</label>
+        <label htmlFor="signin-email" className="form-label">info@kenwakan.com</label>
         <input
         id="signin-email"
         type="email"
@@ -40,7 +40,7 @@ return (
         />
     </div>
     <div className="mb-3">
-        <label htmlFor="signin-password" className="form-label">Password</label>
+        <label htmlFor="signin-password" className="form-label">Integrity108</label>
         <input
         id="signin-password"
         type="password"

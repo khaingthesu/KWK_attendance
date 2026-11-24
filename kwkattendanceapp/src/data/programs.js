@@ -232,13 +232,4 @@ export const programs = {
     },
 }
 
-// Fixed display order for dropdowns and the Students tab columns.
-export const programOrder = [
-    'tiny-tiger',
-    'ninja-skills',
-    'junior-basic',
-    'junior-bbc-6-9',
-    'junior-bbc-10-plus',
-    'adult-teen-basic',
-    'adult-teen-bbc',
-]
+

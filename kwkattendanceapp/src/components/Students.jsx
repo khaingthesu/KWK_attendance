@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import { programs, programOrder } from '../data/programs'
 
-// One column per program. Each column lists that program's current students
-// (from Firestore) with a Remove button, and an add area at the bottom that
-// adds a new student to that specific program.
+//in the students tab--> there is program, roaster, addStudent, removeStudent
 function ProgramColumn({ programId, roster, addStudent, removeStudent }) {
 const [newName, setNewName] = useState('')
-const students = roster[programId]?.students || []
+const students = [...(roster[programId]?.students || [])].sort((a, b) =>
+    a.localeCompare(b, 'en', { sensitivity: 'base' })
+)
 const programName = programs[programId]?.name || programId
 
 function handleAdd(event) {
