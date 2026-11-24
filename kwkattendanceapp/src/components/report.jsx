@@ -1,9 +1,10 @@
 import { useState } from 'react'
 
-function Report({ today, savedAttendance, undoPresent }) {
+function Report({ today, savedAttendance, undoPresent, notes }) {
 const [selectedDate, setSelectedDate] = useState(today)
 const selectedRecords = Object.entries(savedAttendance)
 .filter(([, record]) => record.date === selectedDate)
+const dayNote = notes?.[selectedDate] || ''
 
 const formattedDate = selectedDate ? new Date(`${selectedDate}T12:00:00`).toLocaleDateString('en-US', {
 month: 'short',
@@ -41,6 +42,13 @@ return (
 
 {!selectedDate && <p role="status">Select a date.</p>}
 {selectedDate && selectedRecords.length === 0 && <p role="status">No attendance saved for this date.</p>}
+
+{selectedDate && dayNote && (
+<div className="mb-4">
+    <h2 className="h5">Notes</h2>
+    <p style={{ whiteSpace: 'pre-wrap' }}>{dayNote}</p>
+</div>
+)}
 
 {selectedRecords.map(([recordKey, record]) => (
 <div key={recordKey} className="mb-4">

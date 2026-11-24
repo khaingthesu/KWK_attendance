@@ -37,6 +37,7 @@ const [savedAttendance, setSavedAttendance] = useState({})
 const [extras, setExtras] = useState({})
 const [roster, setRoster] = useState({})
 const [rosterLoaded, setRosterLoaded] = useState(false)
+const [notes, setNotes] = useState({})
 
 useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -97,11 +98,21 @@ useEffect(() => {
         setRosterLoaded(true)
     })
 
+    const unsubNotes = onSnapshot(collection(db, 'notes'), (snapshot) => {
+        const next = {}
+        snapshot.forEach((d) => {
+            const data = d.data()
+            next[data.date] = data.text || ''
+        })
+        setNotes(next)
+    })
+
     return () => {
         unsubDrafts()
         unsubSaved()
         unsubExtras()
         unsubRoster()
+        unsubNotes()
     }
 }, [user])
 
@@ -191,6 +202,15 @@ function addExtra(recordKey, name) {
     if (!draft.includes(trimmed)) setDraft(recordKey, [...draft, trimmed])
 }
 
+// One general note per date, shared across programs for that day.
+function saveNote(noteDate, text) {
+    setNotes((records) => ({ ...records, [noteDate]: text }))
+    setDoc(doc(db, 'notes', noteDate), {
+        date: noteDate,
+        text,
+    }).catch(() => setAuthError('Unable to save the note. Check your connection.'))
+}
+
 // Permanent roster edits. These change future classes only; saved records keep
 // the names they were saved with, so history is not rewritten.
 function addStudent(programId, name) {
@@ -251,6 +271,8 @@ const attendancePage = (
         addExtra={addExtra}
         removeExtra={removeExtra}
         roster={roster}
+        note={notes[date] || ''}
+        saveNote={saveNote}
     />
 )
 
@@ -288,7 +310,7 @@ return (
             <Route path="/signin" element={user ? <Navigate to="/attendance" replace /> : <SignIn />} />
             <Route path="/" element={<Navigate to={user ? '/attendance' : '/signin'} replace />} />
             <Route path="/attendance" element={user ? attendancePage : <Navigate to="/signin" replace />} />
-            <Route path="/reports" element={user ? <Report today={getToday()} savedAttendance={savedAttendance} undoPresent={undoPresent} /> : <Navigate to="/signin" replace />} />
+            <Route path="/reports" element={user ? <Report today={getToday()} savedAttendance={savedAttendance} undoPresent={undoPresent} notes={notes} /> : <Navigate to="/signin" replace />} />
             <Route path="/students" element={user ? <Students roster={roster} addStudent={addStudent} removeStudent={removeStudent} /> : <Navigate to="/signin" replace />} />
             <Route path="*" element={<Navigate to={user ? '/attendance' : '/signin'} replace />} />
         </Routes>

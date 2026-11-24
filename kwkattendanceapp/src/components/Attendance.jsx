@@ -1,10 +1,13 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { programOrder, programs } from '../data/programs'
 
-function Attendance({ date, setDate, program, setProgram, attendance, setDraft, saveAttendance, extras, addExtra, removeExtra, roster }) {
+function Attendance({ date, setDate, program, setProgram, attendance, setDraft, saveAttendance, extras, addExtra, removeExtra, roster, note, saveNote }) {
 const [savedMessage, setSavedMessage] = useState('')
 const [newName, setNewName] = useState('')
+const [noteText, setNoteText] = useState(note)
+const [noteSaved, setNoteSaved] = useState(false)
+useEffect(() => { setNoteText(note); setNoteSaved(false) }, [note, date])
 const selectedProgram = programs[program]
 // Live roster from Firestore (falls back to empty until it loads).
 const students = roster[program]?.students || []
@@ -147,6 +150,27 @@ return (
                 Add
             </button>
         </form>
+
+        <div className="mt-4">
+            <label htmlFor="day-note" className="form-label">Notes for {date}</label>
+            <textarea
+                id="day-note"
+                className="form-control"
+                rows={4}
+                placeholder="Write anything about today (applies to the whole day)."
+                value={noteText}
+                onChange={(event) => { setNoteText(event.target.value); setNoteSaved(false) }}
+            />
+            <button
+                type="button"
+                className="btn btn-outline-primary mt-2"
+                style={{ minHeight: '44px' }}
+                onClick={() => { saveNote(date, noteText); setNoteSaved(true) }}
+            >
+                Save Note
+            </button>
+            {noteSaved && <span role="status" className="ms-2 text-success">Saved</span>}
+        </div>
 
         <button
             type="button"
