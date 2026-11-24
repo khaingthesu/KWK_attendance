@@ -21,7 +21,7 @@ import Students from './components/students.jsx'
 // Bundled program/roster seed data and the order programs should appear in.
 import { programOrder, programs } from './data/programs'
 // Bundled weekly timetable seed data and the order weekdays should appear in.
-import { seedSchedule, weekdayOrder, weekdayIdFromDate } from './data/schedule'
+import { seedSchedule, weekdayIdFromDate, weekdayOrder } from './data/schedule'
 // The initialized Firebase Auth and Firestore instances for this app.
 import { auth, db } from './firebase/firebase'
 
@@ -123,6 +123,8 @@ useEffect(() => {
                 classLabel: data.classLabel || data.programName || '', // Fall back to older field name.
                 time: data.time || '',
                 tag: data.tag || '',
+                instructor: data.instructor || '',             // Blank for records saved before this field existed.
+                assistant: data.assistant || '',               // Blank for records saved before this field existed.
                 students: data.students || [],
             }
         })
@@ -234,6 +236,8 @@ function setDraft(recordKey, students, meta) {
     const classLabel = meta?.label ?? existingSaved?.classLabel ?? ''
     const time = meta?.time ?? existingSaved?.time ?? ''
     const tag = meta?.tag ?? existingSaved?.tag ?? ''
+    const instructor = meta?.instructor ?? existingSaved?.instructor ?? ''
+    const assistant = meta?.assistant ?? existingSaved?.assistant ?? ''
     // Persist the draft doc.
     setDoc(doc(db, 'drafts', docIdFor(recordKey)), {
         date: recDate,
@@ -241,6 +245,8 @@ function setDraft(recordKey, students, meta) {
         classLabel,
         time,
         tag,
+        instructor,
+        assistant,
         students,
     }).catch(() => setAuthError('Unable to save the mark. Check your connection.'))
 
@@ -260,6 +266,8 @@ function setDraft(recordKey, students, meta) {
                 classLabel,
                 time,
                 tag,
+                instructor,
+                assistant,
                 students,
             }).catch(() => setAuthError('Unable to update the report. Check your connection.'))
         }
@@ -267,19 +275,22 @@ function setDraft(recordKey, students, meta) {
 }
 
 // Save all marked classes for the selected date together at the end of the day.
-async function saveAttendance() {
+async function saveAttendance(instructor = '', assistant = '') {
     const dayClasses = schedule[weekdayIdFromDate(date)] || []
     const markedClasses = dayClasses.filter((cls) => attendance[`${date}/${cls.id}`]?.length)
     if (markedClasses.length === 0) return false
     const batch = writeBatch(db)
     for (const cls of markedClasses) {
         const recordKey = `${date}/${cls.id}`
+        const existingSaved = savedAttendance[recordKey]       // Keep any previously-saved names if none chosen now.
         batch.set(doc(db, 'saved', docIdFor(recordKey)), {
             date,
             classId: cls.id,
             classLabel: cls.label || '',
             time: cls.time || '',
             tag: cls.tag || '',
+            instructor: instructor || existingSaved?.instructor || '',
+            assistant: assistant || existingSaved?.assistant || '',
             students: [...attendance[recordKey]],
         })
     }
@@ -304,13 +315,15 @@ function undoPresent(recordKey, name) {
             classLabel: savedRecord.classLabel || '',
             time: savedRecord.time || '',
             tag: savedRecord.tag || '',
+            instructor: savedRecord.instructor || '',
+            assistant: savedRecord.assistant || '',
             students,
         }).catch(() => setAuthError('Unable to update the record. Check your connection.'))
     }
     // Update the draft too, so saving again does not restore the undone mark.
     const draftStudents = (attendance[recordKey] || []).filter((student) => student !== name)
     setDraft(recordKey, draftStudents, savedRecord
-        ? { label: savedRecord.classLabel, time: savedRecord.time, tag: savedRecord.tag } // Carry metadata.
+        ? { label: savedRecord.classLabel, time: savedRecord.time, tag: savedRecord.tag, instructor: savedRecord.instructor, assistant: savedRecord.assistant } // Carry metadata.
         : undefined)
 }
 

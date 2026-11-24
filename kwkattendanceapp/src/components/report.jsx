@@ -73,9 +73,13 @@ return (
     <h2 className="h4 border-bottom pb-2">{timeLabel}</h2>
     {timeGroups[timeLabel].map(([recordKey, record]) => {
     const recordLabel = record.classLabel || record.programName
+    const instructorNames = [record.instructor, record.assistant].filter(Boolean).join(', ')
     return (
     <div key={recordKey} className="mb-4">
-        <h3 className="h5">{recordLabel} <span aria-live="polite">({record.students.length} students present)</span></h3>
+        <h3 className="h5">
+            {recordLabel} <span aria-live="polite">({record.students.length} students present)</span>
+            {instructorNames && <span className="ms-2 text-muted fs-6 fw-normal">{instructorNames}</span>}
+        </h3>
         <div className="table-responsive">
         <table className="table align-middle" aria-label={`${recordLabel} at ${timeLabel}`}>
             <thead className="visually-hidden">

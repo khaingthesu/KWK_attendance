@@ -34,7 +34,7 @@ const selectedClass = dayClasses.find((cls) => cls.id === selectedClassId) || nu
 // Live combined roster for the selected class (from Firestore).
 const students = selectedClass ? classRoster(selectedClass, roster) : []
 const classMeta = selectedClass
-    ? { label: selectedClass.label, time: selectedClass.time, tag: selectedClass.tag }
+    ? { label: selectedClass.label, time: selectedClass.time, tag: selectedClass.tag, instructor: selectedInstructor, assistant: assistantInstructor }
     : null
 
 // Each date + class keeps its own marks.
@@ -283,7 +283,7 @@ return (
                 setSavedMessage('')
                 setSaving(true)
                 try {
-                    if (await saveAttendance()) {
+                    if (await saveAttendance(selectedInstructor, assistantInstructor)) {
                         setSavedMessage(`Saved attendance for ${date}. Choose this date in Reports to view all classes.`)
                     } else {
                         setSavedMessage('Attendance was not saved. Please try again.')
