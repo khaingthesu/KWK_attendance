@@ -4,12 +4,12 @@ import { getFirestore } from "firebase/firestore";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyAE03fhx_mpx6nEGQXV4VJsY3HutZ6CkEQ",
-  authDomain: "kwkattendance.firebaseapp.com",
-  projectId: "kwkattendance",
-  storageBucket: "kwkattendance.firebasestorage.app",
-  messagingSenderId: "471087221014",
-  appId: "1:471087221014:web:c45602085f7ae2fb1b2837"
+apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
 export const app = initializeApp(firebaseConfig);

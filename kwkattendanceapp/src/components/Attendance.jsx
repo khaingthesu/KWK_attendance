@@ -1,172 +1,174 @@
-const tinyTigerStudents = [
-'Aiden Z',
-'Alice U',
-'Daniel B',
-'Frankie B',
-'Harry B',
-'Henry G',
-'Jack D.T',
-'Madison B',
-'Maggie H',
-'Milo A-N',
-'Nina D',
-'Owen F',
-'Rory M',
-'Rylan R',
-'Senna H',
-'Sloane H',
-'Theo F',
-'Theo Cz',
-'Teddy M',
-'Noor D',
-]
+import { useState } from 'react'
+import { Link } from 'react-router-dom'
+import { programOrder, programs } from '../data/programs'
 
-const ninjaSkillStudents = [
-  'Asa C',
-  'Eli S',
-  'Elise (Mei Mei)',
-  'Emerson',
-  'Freddie M',
-  'Jayden S',
-  'LuLu',
-  'Oliver S',
-  'Pari K',
-  'Stella T',
-  'Troy L',
-]
+function Attendance({ date, setDate, program, setProgram, attendance, setDraft, saveAttendance, extras, addExtra, removeExtra, roster }) {
+const [savedMessage, setSavedMessage] = useState('')
+const [newName, setNewName] = useState('')
+const selectedProgram = programs[program]
+// Live roster from Firestore (falls back to empty until it loads).
+const students = roster[program]?.students || []
 
-const programs = {
-  'tiny-tiger': {
-    name: 'Tiny Tiger',
-    students: tinyTigerStudents,
-  },
-  'ninja-skill-karate': {
-    name: 'Ninja Skill Karate',
-    students: ninjaSkillStudents,
-  },
-}
-
-function Attendance({
-date,
-setDate,
-category,
-setCategory,
-attendance,
-setAttendance,
-submitAttendance,
-}) {
-
-const weekday = date
-? new Date(`${date}T12:00:00`).toLocaleDateString('en-US', {
-weekday: 'long',
-})
-: ''
-const recordKey = `${date}/${category}`
+// Keep each date and program's marks separate.
+const recordKey = `${date}/${program}`
 const presentStudents = attendance[recordKey] || []
-const selectedProgram = programs[category]
-const students = selectedProgram?.students || []
-const showStudents = Boolean(date && selectedProgram)
+const extraStudents = extras[recordKey] || []
 
-function toggleAttendance(name) {
-setAttendance((records) => {
-const current = records[recordKey] || []
+function togglePresent(name) {
+setSavedMessage('')
+const current = attendance[recordKey] || []
 const updated = current.includes(name)
-? current.filter((student) => student !== name)
-: [...current, name]
-
-return { ...records, [recordKey]: updated }
-});
+    ? current.filter((student) => student !== name)
+    : [...current, name]
+setDraft(recordKey, updated)
 }
 
 return (
-<section className="mx-auto py-4" style={{ maxWidth: '480px' }}>
+<section className="container py-4 text-start" style={{ maxWidth: '480px' }}>
+    <h1 className="h3">Attendance</h1>
 
-<div className="mb-3">
-<label htmlFor="attendance-date" className="form-label">
-    Today's Date
-</label>
-<input
-    id="attendance-date"
-    type="date"
-    className="form-control"
-    value={date}
-    onChange={(event) => setDate(event.target.value)}
-/>
-<p className="small text-muted mt-2" aria-live="polite">
-    {weekday || 'Select a date to see the day.'}
-</p>
-</div>
+    <div className="mb-3">
+    <label htmlFor="attendance-date" className="form-label">Today's Date</label>
+    <input
+        id="attendance-date"
+        type="date"
+        className="form-control form-control-lg"
+        value={date}
+        onChange={(event) => { setDate(event.target.value); setSavedMessage('') }}
+    />
+    </div>
 
-<div className="mb-4">
-<label htmlFor="attendance-category" className="form-label">
-    Program Choice
-</label>
-<select
-    id="attendance-category"
-    className="form-select"
-    value={category}
-    onChange={(event) => setCategory(event.target.value)}
->
-    <option value="">Choose a category</option>
-    <option value="tiny-tiger">Tiny Tiger</option>
-    <option value="ninja-skill-karate">Ninja Skill Karate</option>
-</select>
-</div>
-
-{showStudents ? (
-<>
-<h2 className="h5">{selectedProgram.name}</h2>
-<p aria-live="polite">{presentStudents.length} of {students.length} students present</p>
-
-<ul className="list-group">
-{students.map((name) => {
-const isPresent = presentStudents.includes(name)
-
-return (
-<li
-    key={name}
-    className="list-group-item d-flex justify-content-between align-items-center gap-3"
->
-    <span>{name}</span>
-
-    <button
-    type="button"
-    className={`btn btn-sm ${
-        isPresent ? 'btn-danger' : 'btn-outline-dark'
-    }`}
-    aria-pressed={isPresent}
-    aria-label={`Mark ${name} ${isPresent ? 'absent' : 'present'}`}
-    onClick={() => toggleAttendance(name)}
+    <div className="mb-4">
+    <label htmlFor="attendance-program" className="form-label">Program</label>
+    <select
+        id="attendance-program"
+        className="form-select form-select-lg"
+        value={program}
+        onChange={(event) => { setProgram(event.target.value); setSavedMessage('') }}
     >
-    {isPresent ? 'Present ✓' : 'Mark Present'}
-    </button>
-</li>
-)
-})}
-</ul>
-<button
-  type="button"
-  className="btn btn-danger w-100 mt-3"
-  onClick={() => {
-    submitAttendance()
-    window.alert('Attendance submitted to Reports!')
-  }}
->
-  Submit Attendance
-</button>
-<p className="small text-muted mt-2">
-  Submit to update Reports for this date and program.
-</p>
-</>
-) : (
-<p className="text-muted">Select a date and category to show students.</p>
-)}
+        <option value="">Choose a program</option>
+        {programOrder.map((id) => (
+            <option key={id} value={id}>{programs[id].name}</option>
+        ))}
+    </select>
+    </div>
 
-<p className="small text-muted mt-3">
-Attendance is not saved yet and will reset on refresh.
-</p>
+    {date && selectedProgram ? (
+    <>
+        <h2 className="h5">{selectedProgram.name}</h2>
+        <p className="mb-3" aria-live="polite">
+        {presentStudents.length} of {students.length} students present
+        </p>
+
+        <ul className="list-group">
+        {students.map((name) => {
+            const isPresent = presentStudents.includes(name)
+
+            return (
+            <li key={name} className="list-group-item d-flex justify-content-between align-items-center gap-3">
+                <span>
+                {name}
+                {isPresent && <span className="d-block text-success">Present ✓</span>}
+                </span>
+                <button
+                type="button"
+                className={`btn ${isPresent ? 'btn-outline-secondary' : 'btn-success'}`}
+                style={{ minHeight: '44px', minWidth: '90px' }}
+                aria-label={`${isPresent ? 'Undo present for' : 'Mark present for'} ${name}`}
+                onClick={() => togglePresent(name)}
+                >
+                {isPresent ? 'Undo' : 'Present'}
+                </button>
+            </li>
+            )
+        })}
+        </ul>
+
+        {extraStudents.length > 0 && (
+        <ul className="list-group mt-2">
+            {extraStudents.map((name) => {
+                const isPresent = presentStudents.includes(name)
+                return (
+                <li key={name} className="list-group-item d-flex justify-content-between align-items-center gap-3">
+                    <span>
+                    {name} <span className="badge text-bg-secondary">Added</span>
+                    {isPresent && <span className="d-block text-success">Present ✓</span>}
+                    </span>
+                    <span className="d-flex gap-2">
+                    <button
+                        type="button"
+                        className={`btn ${isPresent ? 'btn-outline-secondary' : 'btn-success'}`}
+                        style={{ minHeight: '44px', minWidth: '90px' }}
+                        aria-label={`${isPresent ? 'Undo present for' : 'Mark present for'} ${name}`}
+                        onClick={() => {
+                            setSavedMessage('')
+                            const updated = isPresent
+                                ? presentStudents.filter((s) => s !== name)
+                                : [...presentStudents, name]
+                            setDraft(recordKey, updated)
+                        }}
+                    >
+                        {isPresent ? 'Undo' : 'Present'}
+                    </button>
+                    <button
+                        type="button"
+                        className="btn btn-outline-danger"
+                        style={{ minHeight: '44px' }}
+                        aria-label={`Remove ${name}`}
+                        onClick={() => { setSavedMessage(''); removeExtra(recordKey, name) }}
+                    >
+                        Remove
+                    </button>
+                    </span>
+                </li>
+                )
+            })}
+        </ul>
+        )}
+
+        <form
+            className="d-flex gap-2 mt-3"
+            onSubmit={(event) => {
+                event.preventDefault()
+                addExtra(recordKey, newName)
+                setNewName('')
+                setSavedMessage('')
+            }}
+        >
+            <input
+                type="text"
+                className="form-control form-control-lg"
+                placeholder="Add Students Manually"
+                aria-label="Add a student from another class"
+                value={newName}
+                onChange={(event) => setNewName(event.target.value)}
+            />
+            <button type="submit" className="btn btn-primary btn-lg" style={{ minWidth: '90px' }}>
+                Add
+            </button>
+        </form>
+
+        <button
+            type="button"
+            className="btn btn-danger btn-lg w-100 mt-3"
+            onClick={() => {
+                saveAttendance(selectedProgram.name)
+                setSavedMessage(`Saved ${selectedProgram.name} for ${date} in this session. Choose this date in Reports to view it.`)
+            }}
+        >
+            Save Attendance
+        </button>
+        {savedMessage && <p role="status" className="mt-3">{savedMessage}</p>}
+        <Link to="/reports" className="d-inline-block mt-3">View Reports</Link>
+        <p className="text-muted mt-2">Attendance is saved and stays after refresh or sign out.</p>
+
+    </>
+    )
+: (
+    <p className="text-muted">Select a date and program to mark attendance.</p>
+    )}
 </section>
 )
 }
 
-export default Attendance;
+export default Attendance

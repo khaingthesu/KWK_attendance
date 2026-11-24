@@ -9,6 +9,10 @@ color: #ffffff;
 font-weight: 900;
 }
 
+footer{
+    font-style: italic;
+    color: red;
+}
 .navbar .navbar-brand:hover,
 .navbar .navbar-brand:focus {
 color: #9e2d2d;
@@ -25,4 +29,54 @@ transition: background-color 0.2s;
 .navbar .nav-link:focus-visible {
 color: #ffffff;
 background: #c8202f;
+}
+
+
+@media print {
+  @page {
+    margin: 15mm;
+  }
+
+  .navbar,
+  footer,
+  .report-controls,
+  .report-action {
+    display: none !important;
+  }
+
+  body,
+  #root {
+    background: white !important;
+    color: black !important;
+  }
+
+  #root {
+    display: block;
+    width: 100%;
+    border: 0;
+    min-height: 0;
+  }
+
+  .attendance-report {
+    max-width: none;
+    padding: 0 !important;
+  }
+
+  .attendance-report h1,
+  .attendance-report h2,
+  .attendance-report time {
+    color: black !important;
+  }
+
+  .attendance-report h2 {
+    break-after: avoid;
+  }
+
+  .attendance-report tr {
+    break-inside: avoid;
+  }
+
+  .attendance-report .table-responsive {
+    overflow: visible;
+  }
 }
