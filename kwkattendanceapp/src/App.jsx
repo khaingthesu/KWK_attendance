@@ -294,7 +294,7 @@ return (
         </Routes>
     )}
 
-    <footer > Application built by Senpai Khaing @2026 for Ken Wa Kan</footer>
+    <footer > copyright by Senpai Khaing @2026 for Ken Wa Kan</footer>
 </BrowserRouter>
 )
 }
