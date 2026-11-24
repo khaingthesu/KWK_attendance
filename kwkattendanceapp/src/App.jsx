@@ -294,7 +294,7 @@ return (
         </Routes>
     )}
 
-    <footer > copyright by Senpai Khaing @2026 for Ken Wa Kan</footer>
+    <footer > copyright by Khaing The Su@2026 Karate-Do Ken Wa Kan</footer>
 </BrowserRouter>
 )
 }
