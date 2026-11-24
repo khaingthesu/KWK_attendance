@@ -193,6 +193,8 @@ function setDraft(recordKey, students) {
 function saveAttendance(programName) {
     const recordKey = `${date}/${program}/${time}`
     const students = [...(attendance[recordKey] || [])]
+    // Don't save an empty class; nothing should appear in Reports with 0 students.
+    if (students.length === 0) return false
     setDoc(doc(db, 'saved', docIdFor(recordKey)), {
         date,
         programId: program,
@@ -200,6 +202,7 @@ function saveAttendance(programName) {
         programName,
         students,
     }).catch(() => setAuthError('Unable to save attendance. Check your connection.'))
+    return true
 }
 
 function undoPresent(recordKey, name) {

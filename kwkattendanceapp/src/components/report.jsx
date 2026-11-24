@@ -12,7 +12,7 @@ return hour * 60 + parseInt(match[2], 10)
 function Report({ today, savedAttendance, undoPresent, notes }) {
 const [selectedDate, setSelectedDate] = useState(today)
 const selectedRecords = Object.entries(savedAttendance)
-.filter(([, record]) => record.date === selectedDate)
+.filter(([, record]) => record.date === selectedDate && record.students.length > 0)
 const dayNote = notes?.[selectedDate] || ''
 
 // Group the day's records by class time, then order the times chronologically.

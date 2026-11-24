@@ -225,9 +225,11 @@ return (
         <button
             type="button"
             className="btn btn-danger btn-lg w-100 mt-3"
+            disabled={presentStudents.length === 0}
             onClick={() => {
-                saveAttendance(selectedProgram.name)
-                setSavedMessage(`Saved ${selectedProgram.name} at ${time} for ${date}. Choose this date in Reports to view it.`)
+                if (saveAttendance(selectedProgram.name)) {
+                    setSavedMessage(`Saved ${selectedProgram.name} at ${time} for ${date}. Choose this date in Reports to view it.`)
+                }
             }}
         >
             Save Attendance
