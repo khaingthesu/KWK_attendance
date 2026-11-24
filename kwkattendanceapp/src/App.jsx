@@ -256,22 +256,27 @@ const attendancePage = (
 
 return (
 <BrowserRouter>
-    <Navbar>
+    <Navbar expand="lg" collapseOnSelect className="border-bottom mb-3">
     <Container>
 
         <Navbar.Brand as={Link} to="/" className="d-flex align-items-center gap-2">
-        <img src={logo} alt="Ken Wa Kan logo" width="60" height="60" />
-        <span>Ken Wa Kan Instructor Attendance App</span>
+        <img src={logo} alt="Ken Wa Kan logo" width="48" height="48" />
+        <span className="navbar-title">Ken Wa Kan Instructor Attendance App</span>
         </Navbar.Brand>
 
-        {user && !authLoading && <Nav>
-        <Nav.Link as={Link} to="/attendance">Attendance</Nav.Link>
-        <Nav.Link as={Link} to="/reports">Reports</Nav.Link>
-        <Nav.Link as={Link} to="/students">Students</Nav.Link>
-        <Nav.Link as="button" type="button" onClick={handleSignOut} disabled={signingOut}>
-            {signingOut ? 'Signing out…' : 'Sign Out'}
-        </Nav.Link>
-        </Nav>}
+        {user && !authLoading && <>
+        <Navbar.Toggle aria-controls="main-nav" />
+        <Navbar.Collapse id="main-nav">
+            <Nav className="ms-auto">
+            <Nav.Link as={Link} to="/attendance">Attendance</Nav.Link>
+            <Nav.Link as={Link} to="/reports">Reports</Nav.Link>
+            <Nav.Link as={Link} to="/students">Students</Nav.Link>
+            <Nav.Link as="button" type="button" onClick={handleSignOut} disabled={signingOut}>
+                {signingOut ? 'Signing out…' : 'Sign Out'}
+            </Nav.Link>
+            </Nav>
+        </Navbar.Collapse>
+        </>}
     </Container>
     </Navbar>
 

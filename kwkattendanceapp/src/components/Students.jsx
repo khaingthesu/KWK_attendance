@@ -22,7 +22,7 @@ function handleRemove(name) {
 }
 
 return (
-<div className="card" style={{ minWidth: '260px', width: '260px', flex: '0 0 auto' }}>
+<div className="card students-column">
     <div className="card-header">
     <h2 className="h6 mb-0">{programName}</h2>
     <small className="text-muted">{students.length} students</small>
@@ -74,7 +74,7 @@ return (
     Add or remove students per program. Changes apply to future classes. Past saved
     attendance keeps the names it was saved with.
     </p>
-    <div className="d-flex gap-3 overflow-auto pb-3" style={{ alignItems: 'flex-start' }}>
+    <div className="students-columns d-flex flex-column flex-lg-row flex-lg-wrap gap-3 pb-3">
     {programOrder.map((programId) => (
         <ProgramColumn
         key={programId}
