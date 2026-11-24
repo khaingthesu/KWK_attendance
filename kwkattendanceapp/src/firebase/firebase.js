@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import { browserSessionPersistence, getAuth, setPersistence } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 // Your web app's Firebase configuration
@@ -14,4 +14,7 @@ appId: import.meta.env.VITE_FIREBASE_APP_ID
 
 export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
+// Sign-in lasts only for the browser tab/session. Closing the tab or browser
+// signs out; a refresh within the same tab stays signed in.
+setPersistence(auth, browserSessionPersistence);
 export const db = getFirestore(app);
