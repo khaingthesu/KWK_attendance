@@ -65,6 +65,9 @@ const [date, setDate] = useState(getToday)
 const [selectedClassId, setSelectedClassId] = useState('')
 // Draft (unsaved) attendance marks, keyed by "date/classId".
 const [attendance, setAttendance] = useState({})
+// Per-class draft instructor/assistant, keyed by "date/classId". Lets a class's
+// chosen instructor persist (and reload) before the day is finally saved.
+const [draftMeta, setDraftMeta] = useState({})
 // Saved attendance records that appear in Reports, keyed by "date/classId".
 const [savedAttendance, setSavedAttendance] = useState({})
 // Manually-added extra attendees, keyed by "date/classId".
@@ -103,12 +106,21 @@ useEffect(() => {
     // Listen to draft attendance docs and rebuild the local "attendance" map.
     const unsubDrafts = onSnapshot(collection(db, 'drafts'), (snapshot) => {
         const next = {}
+        const nextMeta = {}
         snapshot.forEach((d) => {
             const data = d.data()
             if (!data.classId) return                          // Skip malformed docs without a classId.
-            next[`${data.date}/${data.classId}`] = data.students || [] // Key by "date/classId".
+            const key = `${data.date}/${data.classId}`         // Key by "date/classId".
+            next[key] = data.students || []
+            // Keep each draft's own instructor/assistant so a class's chosen
+            // instructor survives reload and shows when that class is selected.
+            nextMeta[key] = {
+                instructor: data.instructor || '',             // Blank for drafts saved before this field existed.
+                assistant: data.assistant || '',
+            }
         })
         setAttendance(next)                                    // Replace local drafts with the live set.
+        setDraftMeta(nextMeta)                                 // Replace local draft metadata with the live set.
     })
 
     // Listen to saved attendance docs (what Reports shows) and rebuild "savedAttendance".
@@ -232,12 +244,15 @@ function setDraft(recordKey, students, meta) {
     setAttendance((records) => ({ ...records, [recordKey]: students })) // Optimistic local update.
     const { date: recDate, classId: recClassId } = parseKey(recordKey) // Split key into date + classId.
     const existingSaved = savedAttendance[recordKey]           // Any already-saved record for this key.
-    // Prefer the metadata passed from the class, then the live saved record.
+    const existingDraftMeta = draftMeta[recordKey]             // This class's own draft instructor/assistant, if any.
+    // Prefer the metadata passed from the class, then the draft's own value, then the live saved record.
     const classLabel = meta?.label ?? existingSaved?.classLabel ?? ''
     const time = meta?.time ?? existingSaved?.time ?? ''
     const tag = meta?.tag ?? existingSaved?.tag ?? ''
-    const instructor = meta?.instructor ?? existingSaved?.instructor ?? ''
-    const assistant = meta?.assistant ?? existingSaved?.assistant ?? ''
+    const instructor = meta?.instructor ?? existingDraftMeta?.instructor ?? existingSaved?.instructor ?? ''
+    const assistant = meta?.assistant ?? existingDraftMeta?.assistant ?? existingSaved?.assistant ?? ''
+    // Keep this class's own draft instructor/assistant in sync locally.
+    setDraftMeta((records) => ({ ...records, [recordKey]: { instructor, assistant } }))
     // Persist the draft doc.
     setDoc(doc(db, 'drafts', docIdFor(recordKey)), {
         date: recDate,
@@ -275,7 +290,9 @@ function setDraft(recordKey, students, meta) {
 }
 
 // Save all marked classes for the selected date together at the end of the day.
-async function saveAttendance(instructor = '', assistant = '') {
+// Each class is saved with its OWN instructor/assistant (from its draft), so one
+// class's instructor never overwrites another's.
+async function saveAttendance() {
     const dayClasses = schedule[weekdayIdFromDate(date)] || []
     const markedClasses = dayClasses.filter((cls) => attendance[`${date}/${cls.id}`]?.length)
     if (markedClasses.length === 0) return false
@@ -283,14 +300,15 @@ async function saveAttendance(instructor = '', assistant = '') {
     for (const cls of markedClasses) {
         const recordKey = `${date}/${cls.id}`
         const existingSaved = savedAttendance[recordKey]       // Keep any previously-saved names if none chosen now.
+        const meta = draftMeta[recordKey]                      // This class's own draft instructor/assistant.
         batch.set(doc(db, 'saved', docIdFor(recordKey)), {
             date,
             classId: cls.id,
             classLabel: cls.label || '',
             time: cls.time || '',
             tag: cls.tag || '',
-            instructor: instructor || existingSaved?.instructor || '',
-            assistant: assistant || existingSaved?.assistant || '',
+            instructor: meta?.instructor || existingSaved?.instructor || '',
+            assistant: meta?.assistant || existingSaved?.assistant || '',
             students: [...attendance[recordKey]],
         })
     }
@@ -438,6 +456,8 @@ const attendancePage = (
         date={date}                                            // Currently viewed date.
         setDate={setDate}                                      // Change the viewed date.
         attendance={attendance}                                // Draft marks map.
+        savedAttendance={savedAttendance}                      // Saved records (source of each class's stored instructor/assistant).
+        draftMeta={draftMeta}                                  // Per-class draft instructor/assistant map.
         setDraft={setDraft}                                    // Save/update a draft mark.
         saveAttendance={saveAttendance}                        // Commit draft to Reports.
         extras={extras}                                        // Extra attendees map.

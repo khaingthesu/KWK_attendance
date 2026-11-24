@@ -232,4 +232,6 @@ export const programs = {
     },
 }
 
+// Use the program definition order consistently throughout the app.
+export const programOrder = Object.keys(programs)
 
