@@ -20,9 +20,22 @@ function getToday() {
     return `${year}-${month}-${day}`
 }
 
-// Firestore doc IDs cannot contain "/", so convert "date/program" to "date_program".
+// Firestore doc IDs cannot contain "/", so turn a record key such as
+// "2026-11-24/tiny-tiger/09:30 AM" into "2026-11-24_tiny-tiger_09-30-AM".
 function docIdFor(recordKey) {
-    return recordKey.replace('/', '_')
+    return recordKey.replace(/[/:\s]/g, '_')
+}
+
+// A record key is "date/programId/time". Time may itself be empty, so split
+// into at most three parts and keep any remainder as the time.
+function parseKey(recordKey) {
+    const firstSlash = recordKey.indexOf('/')
+    const secondSlash = recordKey.indexOf('/', firstSlash + 1)
+    return {
+        date: recordKey.slice(0, firstSlash),
+        programId: recordKey.slice(firstSlash + 1, secondSlash),
+        time: recordKey.slice(secondSlash + 1),
+    }
 }
 
 function App() {
@@ -32,6 +45,7 @@ const [authError, setAuthError] = useState('')
 const [signingOut, setSigningOut] = useState(false)
 const [date, setDate] = useState(getToday)
 const [program, setProgram] = useState('')
+const [time, setTime] = useState('')
 const [attendance, setAttendance] = useState({})
 const [savedAttendance, setSavedAttendance] = useState({})
 const [extras, setExtras] = useState({})
@@ -61,7 +75,7 @@ useEffect(() => {
         const next = {}
         snapshot.forEach((d) => {
             const data = d.data()
-            next[`${data.date}/${data.programId}`] = data.students || []
+            next[`${data.date}/${data.programId}/${data.time || ''}`] = data.students || []
         })
         setAttendance(next)
     })
@@ -70,9 +84,10 @@ useEffect(() => {
         const next = {}
         snapshot.forEach((d) => {
             const data = d.data()
-            next[`${data.date}/${data.programId}`] = {
+            next[`${data.date}/${data.programId}/${data.time || ''}`] = {
                 date: data.date,
                 programName: data.programName,
+                time: data.time || '',
                 students: data.students || [],
             }
         })
@@ -83,7 +98,7 @@ useEffect(() => {
         const next = {}
         snapshot.forEach((d) => {
             const data = d.data()
-            next[`${data.date}/${data.programId}`] = data.students || []
+            next[`${data.date}/${data.programId}/${data.time || ''}`] = data.students || []
         })
         setExtras(next)
     })
@@ -147,10 +162,11 @@ async function handleSignOut() {
 // the snapshot keeps every device in sync afterward.
 function setDraft(recordKey, students) {
     setAttendance((records) => ({ ...records, [recordKey]: students }))
-    const [recDate, recProgram] = recordKey.split('/')
+    const { date: recDate, programId: recProgram, time: recTime } = parseKey(recordKey)
     setDoc(doc(db, 'drafts', docIdFor(recordKey)), {
         date: recDate,
         programId: recProgram,
+        time: recTime,
         students,
     }).catch(() => setAuthError('Unable to save the mark. Check your connection.'))
 
@@ -166,6 +182,7 @@ function setDraft(recordKey, students) {
             setDoc(doc(db, 'saved', docIdFor(recordKey)), {
                 date: recDate,
                 programId: recProgram,
+                time: recTime,
                 programName: existingSaved.programName,
                 students,
             }).catch(() => setAuthError('Unable to update the report. Check your connection.'))
@@ -174,11 +191,12 @@ function setDraft(recordKey, students) {
 }
 
 function saveAttendance(programName) {
-    const recordKey = `${date}/${program}`
+    const recordKey = `${date}/${program}/${time}`
     const students = [...(attendance[recordKey] || [])]
     setDoc(doc(db, 'saved', docIdFor(recordKey)), {
         date,
         programId: program,
+        time,
         programName,
         students,
     }).catch(() => setAuthError('Unable to save attendance. Check your connection.'))
@@ -188,9 +206,11 @@ function undoPresent(recordKey, name) {
     const savedRecord = savedAttendance[recordKey]
     if (savedRecord) {
         const students = savedRecord.students.filter((student) => student !== name)
+        const { programId: recProgram, time: recTime } = parseKey(recordKey)
         setDoc(doc(db, 'saved', docIdFor(recordKey)), {
             date: savedRecord.date,
-            programId: recordKey.split('/')[1],
+            programId: recProgram,
+            time: recTime,
             programName: savedRecord.programName,
             students,
         }).catch(() => setAuthError('Unable to update the record. Check your connection.'))
@@ -208,11 +228,12 @@ function addExtra(recordKey, name) {
     const current = extras[recordKey] || []
     if (current.includes(trimmed)) return
     const updated = [...current, trimmed]
-    const [recDate, recProgram] = recordKey.split('/')
+    const { date: recDate, programId: recProgram, time: recTime } = parseKey(recordKey)
     setExtras((records) => ({ ...records, [recordKey]: updated }))
     setDoc(doc(db, 'extras', docIdFor(recordKey)), {
         date: recDate,
         programId: recProgram,
+        time: recTime,
         students: updated,
     }).catch(() => setAuthError('Unable to add the name. Check your connection.'))
     // Mark the extra present in the draft right away.
@@ -264,11 +285,12 @@ function removeStudent(programId, name) {
 
 function removeExtra(recordKey, name) {
     const updated = (extras[recordKey] || []).filter((s) => s !== name)
-    const [recDate, recProgram] = recordKey.split('/')
+    const { date: recDate, programId: recProgram, time: recTime } = parseKey(recordKey)
     setExtras((records) => ({ ...records, [recordKey]: updated }))
     setDoc(doc(db, 'extras', docIdFor(recordKey)), {
         date: recDate,
         programId: recProgram,
+        time: recTime,
         students: updated,
     }).catch(() => setAuthError('Unable to remove the name. Check your connection.'))
     // Also unmark from the draft.
@@ -282,6 +304,8 @@ const attendancePage = (
         setDate={setDate}
         program={program}
         setProgram={setProgram}
+        time={time}
+        setTime={setTime}
         attendance={attendance}
         setDraft={setDraft}
         saveAttendance={saveAttendance}

@@ -2,18 +2,35 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { programOrder, programs } from '../data/programs'
 
-function Attendance({ date, setDate, program, setProgram, attendance, setDraft, saveAttendance, extras, addExtra, removeExtra, roster, note, saveNote }) {
+const HOURS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12']
+const MINUTES = ['00', '15', '30', '45']
+const MERIDIEMS = ['AM', 'PM']
+
+function Attendance({ date, setDate, program, setProgram, time, setTime, attendance, setDraft, saveAttendance, extras, addExtra, removeExtra, roster, note, saveNote }) {
 const [savedMessage, setSavedMessage] = useState('')
 const [newName, setNewName] = useState('')
 const [noteText, setNoteText] = useState(note)
 const [noteSaved, setNoteSaved] = useState(false)
+// Separate dropdown pieces that combine into the "09:30 AM" time string.
+const [hour, setHour] = useState('')
+const [minute, setMinute] = useState('')
+const [meridiem, setMeridiem] = useState('')
 useEffect(() => { setNoteText(note); setNoteSaved(false) }, [note, date])
+// Build the class time once all three parts are chosen, e.g. "09:30 AM".
+useEffect(() => {
+    if (hour && minute && meridiem) {
+        setTime(`${hour.padStart(2, '0')}:${minute} ${meridiem}`)
+    } else {
+        setTime('')
+    }
+    setSavedMessage('')
+}, [hour, minute, meridiem, setTime])
 const selectedProgram = programs[program]
 // Live roster from Firestore (falls back to empty until it loads).
 const students = roster[program]?.students || []
 
-// Keep each date and program's marks separate.
-const recordKey = `${date}/${program}`
+// Each date, program, and class time keeps its own marks.
+const recordKey = `${date}/${program}/${time}`
 const presentStudents = attendance[recordKey] || []
 const extraStudents = extras[recordKey] || []
 
@@ -56,9 +73,42 @@ return (
     </select>
     </div>
 
-    {date && selectedProgram ? (
+    <div className="mb-4">
+    <label className="form-label">Class Time</label>
+    <div className="d-flex gap-2">
+        <select
+            className="form-select form-select-lg"
+            aria-label="Hour"
+            value={hour}
+            onChange={(event) => setHour(event.target.value)}
+        >
+            <option value="">Hour</option>
+            {HOURS.map((h) => <option key={h} value={h}>{h}</option>)}
+        </select>
+        <select
+            className="form-select form-select-lg"
+            aria-label="Minute"
+            value={minute}
+            onChange={(event) => setMinute(event.target.value)}
+        >
+            <option value="">Min</option>
+            {MINUTES.map((m) => <option key={m} value={m}>{m}</option>)}
+        </select>
+        <select
+            className="form-select form-select-lg"
+            aria-label="AM or PM"
+            value={meridiem}
+            onChange={(event) => setMeridiem(event.target.value)}
+        >
+            <option value="">AM/PM</option>
+            {MERIDIEMS.map((p) => <option key={p} value={p}>{p}</option>)}
+        </select>
+    </div>
+    </div>
+
+    {date && selectedProgram && time ? (
     <>
-        <h2 className="h5">{selectedProgram.name}</h2>
+        <h2 className="h5">{selectedProgram.name} — {time}</h2>
         <p className="mb-3" aria-live="polite">
         {presentStudents.length} of {students.length} students present
         </p>
@@ -177,7 +227,7 @@ return (
             className="btn btn-danger btn-lg w-100 mt-3"
             onClick={() => {
                 saveAttendance(selectedProgram.name)
-                setSavedMessage(`Saved ${selectedProgram.name} for ${date} in this session. Choose this date in Reports to view it.`)
+                setSavedMessage(`Saved ${selectedProgram.name} at ${time} for ${date}. Choose this date in Reports to view it.`)
             }}
         >
             Save Attendance
@@ -189,7 +239,7 @@ return (
     </>
     )
 : (
-    <p className="text-muted">Select a date and program to mark attendance.</p>
+    <p className="text-muted">Select a date, program, and class time to mark attendance.</p>
     )}
 </section>
 )
