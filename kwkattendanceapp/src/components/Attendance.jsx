@@ -13,11 +13,14 @@ function tagBadgeClass(tag) {
 function Attendance({ date, setDate, attendance, setDraft, saveAttendance, extras, addExtra, removeExtra, roster, note, saveNote, schedule, selectedClassId, setSelectedClassId }) {
 const [savedMessage, setSavedMessage] = useState('')
 const [newName, setNewName] = useState('')
+const [search, setSearch] = useState('')
 const [noteText, setNoteText] = useState(note)
 const [noteSaved, setNoteSaved] = useState(false)
 useEffect(() => { setNoteText(note); setNoteSaved(false) }, [note, date])
 // Changing the date clears the selected class and any saved message.
 useEffect(() => { setSelectedClassId(''); setSavedMessage('') }, [date, setSelectedClassId])
+// Clear the search box when switching classes so the new roster shows in full.
+useEffect(() => { setSearch('') }, [selectedClassId])
 
 const weekdayId = weekdayIdFromDate(date)
 const dayClasses = schedule[weekdayId] || []
@@ -92,8 +95,31 @@ return (
         {presentStudents.length} of {students.length} students present
         </p>
 
+        <div className="input-group mb-3">
+        <input
+            type="text"
+            className="form-control form-control-lg"
+            placeholder="Search students"
+            aria-label="Search students"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+        />
+        {search && (
+            <button
+                type="button"
+                className="btn btn-outline-secondary"
+                aria-label="Clear search"
+                onClick={() => setSearch('')}
+            >
+                Clear
+            </button>
+        )}
+        </div>
+
         <ul className="list-group">
-        {students.map((name) => {
+        {students
+        .filter((name) => name.toLowerCase().includes(search.trim().toLowerCase()))
+        .map((name) => {
             const isPresent = presentStudents.includes(name)
 
             return (
