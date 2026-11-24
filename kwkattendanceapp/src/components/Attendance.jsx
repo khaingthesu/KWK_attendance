@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Button } from 'react-bootstrap'
 import { Link } from 'react-router-dom'
 import { classRoster, weekdayIdFromDate, weekdayLabels } from '../data/schedule'
 
@@ -15,6 +16,9 @@ const [savedMessage, setSavedMessage] = useState('')
 const [saving, setSaving] = useState(false)
 const [newName, setNewName] = useState('')
 const [search, setSearch] = useState('')
+// Standalone UI selections — these do not filter the attendance list.
+const [selectedInstructor, setSelectedInstructor] = useState('')
+const [classChoice, setClassChoice] = useState('')
 const [noteText, setNoteText] = useState(note)
 const [noteSaved, setNoteSaved] = useState(false)
 useEffect(() => { setNoteText(note); setNoteSaved(false) }, [note, date])
@@ -87,7 +91,7 @@ return (
     </div>
     )}
 
-    {date && selectedClass ? (
+    {date && selectedClass && (
     <>
         <h2 className="h5">
             {selectedClass.label} — {selectedClass.time}
@@ -97,7 +101,42 @@ return (
         {presentStudents.length} of {students.length} students present
         </p>
 
-        <div className="input-group mb-3">
+        {/* Instructor dropdown — standalone, does not filter the list.
+            Placeholder options; wire to real instructor data later. */}
+        <div className="mb-3">
+        <label htmlFor="instructor-select" className="form-label">Instructor name</label>
+        <select
+            id="instructor-select"
+            className="form-select"
+            value={selectedInstructor}
+            onChange={(event) => setSelectedInstructor(event.target.value)}
+        >
+            <option value="">Select instructor</option>
+            <option value="Instructor 1">Instructor 1</option>
+            <option value="Instructor 2">Instructor 2</option>
+            <option value="Instructor 3">Instructor 3</option>
+        </select>
+        </div>
+
+        {/* Classes dropdown — standalone, does not filter the list.
+            Populated from the scheduled classes for the selected day. */}
+        <div className="mb-3">
+        <label htmlFor="class-select" className="form-label">Classes</label>
+        <select
+            id="class-select"
+            className="form-select"
+            value={classChoice}
+            onChange={(event) => setClassChoice(event.target.value)}
+        >
+            <option value="">Select class</option>
+            {dayClasses.map((cls) => (
+                <option key={cls.id} value={cls.id}>{cls.label} — {cls.time}</option>
+            ))}
+        </select>
+        </div>
+
+        <div className="input-group mb-3" style={{ maxWidth: '260px' }}>
+        
         <input
             type="text"
             className="form-control form-control-lg"
@@ -230,11 +269,7 @@ return (
         </div>
 
     </>
-    )
-: (
-    <p className="text-muted">Select a date and a class to mark attendance.</p>
     )}
-
     {date && (
     <div className="mt-4">
         <p className="text-muted">Mark attendance throughout the day, then save all classes together when the day is finished.</p>
@@ -260,11 +295,11 @@ return (
             {saving ? 'Saving…' : "Save Today’s Attendance"}
         </button>
         {savedMessage && <p role="status" className="mt-3">{savedMessage}</p>}
-        <Link to="/reports" className="d-inline-block mt-3">View Reports</Link>
-        <p className="text-muted mt-2">Your marks stay after refresh or sign out. Save today’s attendance to include all marked classes in Reports.</p>
+        <Button variant="outline-primary" as={Link} to="/reports" className="d-inline-block mt-3">View Attendance Reports</Button>
     </div>
     )}
 </section>
+
 )
 }
 
