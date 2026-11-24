@@ -1,5 +1,5 @@
 import { onAuthStateChanged, signOut } from 'firebase/auth'
-import { collection, doc, onSnapshot, setDoc } from 'firebase/firestore'
+import { collection, deleteDoc, doc, onSnapshot, setDoc } from 'firebase/firestore'
 import { useEffect, useState } from 'react'
 import { Container, Nav, Navbar } from 'react-bootstrap'
 import { BrowserRouter, Link, Navigate, Route, Routes } from 'react-router-dom'
@@ -153,6 +153,24 @@ function setDraft(recordKey, students) {
         programId: recProgram,
         students,
     }).catch(() => setAuthError('Unable to save the mark. Check your connection.'))
+
+    // If this class was already saved, keep the report in sync with the marks.
+    // Undoing a student here removes them from the report; emptying the class
+    // removes the whole record from the report.
+    const existingSaved = savedAttendance[recordKey]
+    if (existingSaved) {
+        if (students.length === 0) {
+            deleteDoc(doc(db, 'saved', docIdFor(recordKey)))
+                .catch(() => setAuthError('Unable to update the report. Check your connection.'))
+        } else {
+            setDoc(doc(db, 'saved', docIdFor(recordKey)), {
+                date: recDate,
+                programId: recProgram,
+                programName: existingSaved.programName,
+                students,
+            }).catch(() => setAuthError('Unable to update the report. Check your connection.'))
+        }
+    }
 }
 
 function saveAttendance(programName) {
