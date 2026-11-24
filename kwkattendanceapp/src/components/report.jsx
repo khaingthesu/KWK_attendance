@@ -71,11 +71,13 @@ return (
 {orderedTimes.map((timeLabel) => (
 <div key={timeLabel} className="mb-5">
     <h2 className="h4 border-bottom pb-2">{timeLabel}</h2>
-    {timeGroups[timeLabel].map(([recordKey, record]) => (
+    {timeGroups[timeLabel].map(([recordKey, record]) => {
+    const recordLabel = record.classLabel || record.programName
+    return (
     <div key={recordKey} className="mb-4">
-        <h3 className="h5">{record.programName} <span aria-live="polite">({record.students.length} students present)</span></h3>
+        <h3 className="h5">{recordLabel} <span aria-live="polite">({record.students.length} students present)</span></h3>
         <div className="table-responsive">
-        <table className="table align-middle" aria-label={`${record.programName} at ${timeLabel}`}>
+        <table className="table align-middle" aria-label={`${recordLabel} at ${timeLabel}`}>
             <thead className="visually-hidden">
             <tr>
                 <th scope="col">Student</th>
@@ -91,7 +93,7 @@ return (
                     type="button"
                     className="btn btn-outline-danger"
                     style={{ minHeight: '44px' }}
-                    aria-label={`Undo present for ${name} in ${record.programName} at ${timeLabel}`}
+                    aria-label={`Undo present for ${name} in ${recordLabel} at ${timeLabel}`}
                     onClick={() => undoPresent(recordKey, name)}
                     >
                     Undo
@@ -103,7 +105,8 @@ return (
         </table>
         </div>
     </div>
-    ))}
+    )
+    })}
 </div>
 ))}
 </section>

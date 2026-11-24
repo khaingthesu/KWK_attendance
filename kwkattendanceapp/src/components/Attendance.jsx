@@ -1,38 +1,37 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { programOrder, programs } from '../data/programs'
+import { classRoster, weekdayIdFromDate, weekdayLabels } from '../data/schedule'
 
-const HOURS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12']
-const MINUTES = ['00', '15', '30', '45']
-const MERIDIEMS = ['AM', 'PM']
+// Badge color for a class tag.
+function tagBadgeClass(tag) {
+    if (tag === 'ZOOM') return 'badge text-bg-info'
+    if (tag === 'SPARRING') return 'badge text-bg-warning'
+    if (tag === 'In Person') return 'badge text-bg-secondary'
+    return ''
+}
 
-function Attendance({ date, setDate, program, setProgram, time, setTime, attendance, setDraft, saveAttendance, extras, addExtra, removeExtra, roster, note, saveNote }) {
+function Attendance({ date, setDate, attendance, setDraft, saveAttendance, extras, addExtra, removeExtra, roster, note, saveNote, schedule, selectedClassId, setSelectedClassId }) {
 const [savedMessage, setSavedMessage] = useState('')
 const [newName, setNewName] = useState('')
 const [noteText, setNoteText] = useState(note)
 const [noteSaved, setNoteSaved] = useState(false)
-// Separate dropdown pieces that combine into the "09:30 AM" time string.
-const [hour, setHour] = useState('')
-const [minute, setMinute] = useState('')
-const [meridiem, setMeridiem] = useState('')
 useEffect(() => { setNoteText(note); setNoteSaved(false) }, [note, date])
-// Build the class time once all three parts are chosen, e.g. "09:30 AM".
-useEffect(() => {
-    if (hour && minute && meridiem) {
-        setTime(`${hour.padStart(2, '0')}:${minute} ${meridiem}`)
-    } else {
-        setTime('')
-    }
-    setSavedMessage('')
-}, [hour, minute, meridiem, setTime])
-const selectedProgram = programs[program]
-// Live roster from Firestore (falls back to empty until it loads).
-const students = roster[program]?.students || []
+// Changing the date clears the selected class and any saved message.
+useEffect(() => { setSelectedClassId(''); setSavedMessage('') }, [date, setSelectedClassId])
 
-// Each date, program, and class time keeps its own marks.
-const recordKey = `${date}/${program}/${time}`
-const presentStudents = attendance[recordKey] || []
-const extraStudents = extras[recordKey] || []
+const weekdayId = weekdayIdFromDate(date)
+const dayClasses = schedule[weekdayId] || []
+const selectedClass = dayClasses.find((cls) => cls.id === selectedClassId) || null
+// Live combined roster for the selected class (from Firestore).
+const students = selectedClass ? classRoster(selectedClass, roster) : []
+const classMeta = selectedClass
+    ? { label: selectedClass.label, time: selectedClass.time, tag: selectedClass.tag }
+    : null
+
+// Each date + class keeps its own marks.
+const recordKey = selectedClass ? `${date}/${selectedClass.id}` : ''
+const presentStudents = (recordKey && attendance[recordKey]) || []
+const extraStudents = (recordKey && extras[recordKey]) || []
 
 function togglePresent(name) {
 setSavedMessage('')
@@ -40,7 +39,7 @@ const current = attendance[recordKey] || []
 const updated = current.includes(name)
     ? current.filter((student) => student !== name)
     : [...current, name]
-setDraft(recordKey, updated)
+setDraft(recordKey, updated, classMeta)
 }
 
 return (
@@ -58,57 +57,37 @@ return (
     />
     </div>
 
+    {date && (
     <div className="mb-4">
-    <label htmlFor="attendance-program" className="form-label">Program</label>
-    <select
-        id="attendance-program"
-        className="form-select form-select-lg"
-        value={program}
-        onChange={(event) => { setProgram(event.target.value); setSavedMessage('') }}
-    >
-        <option value="">Choose a program</option>
-        {programOrder.map((id) => (
-            <option key={id} value={id}>{programs[id].name}</option>
+    <label className="form-label">{weekdayId ? `${weekdayLabels[weekdayId]} classes` : 'Classes'}</label>
+    {dayClasses.length === 0 ? (
+        <p className="text-muted">No classes scheduled for this day. Add classes in the Schedule tab.</p>
+    ) : (
+        <div className="list-group">
+        {dayClasses.map((cls) => (
+            <button
+                key={cls.id}
+                type="button"
+                className={`list-group-item list-group-item-action d-flex justify-content-between align-items-center gap-2 ${cls.id === selectedClassId ? 'active' : ''}`}
+                style={{ minHeight: '44px' }}
+                aria-pressed={cls.id === selectedClassId}
+                onClick={() => { setSelectedClassId(cls.id); setSavedMessage('') }}
+            >
+                <span>{cls.label} — {cls.time}</span>
+                {cls.tag && <span className={tagBadgeClass(cls.tag)}>{cls.tag}</span>}
+            </button>
         ))}
-    </select>
+        </div>
+    )}
     </div>
+    )}
 
-    <div className="mb-4">
-    <label className="form-label">Class Time</label>
-    <div className="d-flex gap-2">
-        <select
-            className="form-select form-select-lg"
-            aria-label="Hour"
-            value={hour}
-            onChange={(event) => setHour(event.target.value)}
-        >
-            <option value="">Hour</option>
-            {HOURS.map((h) => <option key={h} value={h}>{h}</option>)}
-        </select>
-        <select
-            className="form-select form-select-lg"
-            aria-label="Minute"
-            value={minute}
-            onChange={(event) => setMinute(event.target.value)}
-        >
-            <option value="">Min</option>
-            {MINUTES.map((m) => <option key={m} value={m}>{m}</option>)}
-        </select>
-        <select
-            className="form-select form-select-lg"
-            aria-label="AM or PM"
-            value={meridiem}
-            onChange={(event) => setMeridiem(event.target.value)}
-        >
-            <option value="">AM/PM</option>
-            {MERIDIEMS.map((p) => <option key={p} value={p}>{p}</option>)}
-        </select>
-    </div>
-    </div>
-
-    {date && selectedProgram && time ? (
+    {date && selectedClass ? (
     <>
-        <h2 className="h5">{selectedProgram.name} — {time}</h2>
+        <h2 className="h5">
+            {selectedClass.label} — {selectedClass.time}
+            {selectedClass.tag && <span className={`${tagBadgeClass(selectedClass.tag)} ms-2`}>{selectedClass.tag}</span>}
+        </h2>
         <p className="mb-3" aria-live="polite">
         {presentStudents.length} of {students.length} students present
         </p>
@@ -158,7 +137,7 @@ return (
                             const updated = isPresent
                                 ? presentStudents.filter((s) => s !== name)
                                 : [...presentStudents, name]
-                            setDraft(recordKey, updated)
+                            setDraft(recordKey, updated, classMeta)
                         }}
                     >
                         {isPresent ? 'Undo' : 'Present'}
@@ -168,7 +147,7 @@ return (
                         className="btn btn-outline-danger"
                         style={{ minHeight: '44px' }}
                         aria-label={`Remove ${name}`}
-                        onClick={() => { setSavedMessage(''); removeExtra(recordKey, name) }}
+                        onClick={() => { setSavedMessage(''); removeExtra(recordKey, name, classMeta) }}
                     >
                         Remove
                     </button>
@@ -183,7 +162,7 @@ return (
             className="d-flex gap-2 mt-3"
             onSubmit={(event) => {
                 event.preventDefault()
-                addExtra(recordKey, newName)
+                addExtra(recordKey, newName, classMeta)
                 setNewName('')
                 setSavedMessage('')
             }}
@@ -227,8 +206,8 @@ return (
             className="btn btn-danger btn-lg w-100 mt-3"
             disabled={presentStudents.length === 0}
             onClick={() => {
-                if (saveAttendance(selectedProgram.name)) {
-                    setSavedMessage(`Saved ${selectedProgram.name} at ${time} for ${date}. Choose this date in Reports to view it.`)
+                if (saveAttendance(classMeta)) {
+                    setSavedMessage(`Saved ${selectedClass.label} at ${selectedClass.time} for ${date}. Choose this date in Reports to view it.`)
                 }
             }}
         >
@@ -241,7 +220,7 @@ return (
     </>
     )
 : (
-    <p className="text-muted">Select a date, program, and class time to mark attendance.</p>
+    <p className="text-muted">Select a date and a class to mark attendance.</p>
     )}
 </section>
 )
