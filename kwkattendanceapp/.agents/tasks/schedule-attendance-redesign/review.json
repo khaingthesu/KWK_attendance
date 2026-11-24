@@ -1,0 +1,10 @@
+{
+  "verdict": "APPROVED",
+  "findings": [
+    "Legacy records dropped: the drafts/saved/extras snapshot readers return on any doc without classId, so attendance saved before this change is invisible in Attendance and Reports. Data is preserved, not deleted, so this matches 'without touching saved attendance'; backfill classId/classLabel if historical reports must still render.",
+    "Free-typed time can't sort: the Schedule add form takes class time as free text, but Reports only sorts strings matching H:MM AM/PM via timeToMinutes; other formats (lowercase am/pm, 'noon') drop to the end of the day. Validate or normalize the time input.",
+    "Combined SPARRING/In Person tag flattened: Wednesday and Friday Adult BBC classes the user described as 'SPARRING In Person' seed with the single tag 'SPARRING', losing 'In Person'.",
+    "Unused roster prop on Schedule route: App.jsx passes roster to <Schedule> but the component ignores it (harmless)."
+  ],
+  "reviewDoc": "/Users/khaingthesu/Desktop/KWK_attendance/kwkattendanceapp/.agents/tasks/schedule-attendance-redesign/review.md"
+}

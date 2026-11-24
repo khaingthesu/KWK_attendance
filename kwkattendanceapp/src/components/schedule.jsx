@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { programs, programOrder } from '../data/programs'
+import { programOrder, programs } from '../data/programs'
 import { TAG_OPTIONS, weekdayLabels, weekdayOrder } from '../data/schedule'
 
 // Badge color for a class tag, consistent with the attendance page badges.
@@ -138,7 +138,7 @@ function WeekdayColumn({ weekday, classes, addScheduleClass, removeScheduleClass
                         id={`fixed-${weekday}`}
                         type="text"
                         className="form-control"
-                        placeholder="e.g. Arlin T (optional)"
+                        placeholder="private class student"
                         value={fixedName}
                         onChange={(event) => setFixedName(event.target.value)}
                     />
