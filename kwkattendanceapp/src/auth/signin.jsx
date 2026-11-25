@@ -28,7 +28,7 @@ return (
     <h1 className="h3">Instructor Sign In</h1>
     <form onSubmit={handleSubmit}>
     <div className="mb-3">
-        <label htmlFor="signin-email" className="form-label">info@kenwakan.com</label>
+        <label htmlFor="signin-email" className="form-label">Enter this in the textbox below: info@kenwakan.com</label>
         <input
         id="signin-email"
         type="email"
@@ -40,7 +40,7 @@ return (
         />
     </div>
     <div className="mb-3">
-        <label htmlFor="signin-password" className="form-label">Integrity108</label>
+        <label htmlFor="signin-password" className="form-label">Enter this in the textbox below: Integrity108</label>
         <input
         id="signin-password"
         type="password"
