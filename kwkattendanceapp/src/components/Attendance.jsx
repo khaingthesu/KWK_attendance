@@ -193,7 +193,7 @@ return (
             id="assistant-instructor"
             type="text"
             className="form-control"
-            placeholder="Assistant instructor"
+            placeholder="optional"
             value={displayedAssistant}
             disabled={!selectedClass}
             onChange={(event) => changeAssistant(event.target.value)}
@@ -350,7 +350,7 @@ return (
     )}
     {date && (
     <div className="mt-4">
-        <p className="text-muted">Mark attendance throughout the day, then save all classes together when the day is finished.</p>
+        <p className="text-muted">Save the attendance or The App will save attendance automattically after midnight local time.</p>
         <p>{markedClassCount} {markedClassCount === 1 ? 'class' : 'classes'} with attendance for {date}.</p>
         <button
             type="button"

@@ -6,12 +6,12 @@ padding: 16px 0;
 
 .navbar .navbar-brand {
 color: #ffffff;
-font-weight: 900;
+font-weight: 500;
 }
 
 footer{
-    font-style: italic;
-    color: red;
+font-style: italic;
+color: rgb(165, 14, 14);
 }
 .navbar .navbar-brand:hover,
 .navbar .navbar-brand:focus {
@@ -34,78 +34,78 @@ background: #c8202f;
 
 /* Make the hamburger toggle visible on the dark navbar. */
 .navbar .navbar-toggler {
-  border-color: rgba(255, 255, 255, 0.4);
+border-color: rgba(255, 255, 255, 0.4);
 }
 .navbar .navbar-toggler-icon {
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(255,255,255,0.85)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(255,255,255,0.85)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
 }
 
 /* Shrink the long brand title on small screens so it clears the hamburger. */
 .navbar-title {
-  font-size: 1rem;
+font-size: 1rem;
 }
 @media (max-width: 575.98px) {
-  .navbar-title {
-    font-size: 0.85rem;
-  }
+.navbar-title {
+font-size: 0.85rem;
+}
 }
 
 /* Students tab: stacked full-width on phones, fixed columns side-by-side on large screens. */
 .students-column {
-  width: 100%;
+width: 100%;
 }
 @media (min-width: 992px) {
-  .students-column {
-    width: 280px;
-    flex: 0 0 auto;
-  }
+.students-column {
+width: 280px;
+flex: 0 0 auto;
+}
 }
 
 @media print {
-  @page {
-    margin: 15mm;
-  }
+@page {
+margin: 15mm;
+}
 
-  .navbar,
-  footer,
-  .report-controls,
-  .report-action {
-    display: none !important;
-  }
+.navbar,
+footer,
+.report-controls,
+.report-action {
+display: none !important;
+}
 
-  body,
-  #root {
-    background: white !important;
-    color: black !important;
-  }
+body,
+#root {
+background: white !important;
+color: black !important;
+}
 
-  #root {
-    display: block;
-    width: 100%;
-    border: 0;
-    min-height: 0;
-  }
+#root {
+display: block;
+width: 100%;
+border: 0;
+min-height: 0;
+}
 
-  .attendance-report {
-    max-width: none;
-    padding: 0 !important;
-  }
+.attendance-report {
+max-width: none;
+padding: 0 !important;
+}
 
-  .attendance-report h1,
-  .attendance-report h2,
-  .attendance-report time {
-    color: black !important;
-  }
+.attendance-report h1,
+.attendance-report h2,
+.attendance-report time {
+color: black !important;
+}
 
-  .attendance-report h2 {
-    break-after: avoid;
-  }
+.attendance-report h2 {
+break-after: avoid;
+}
 
-  .attendance-report tr {
-    break-inside: avoid;
-  }
+.attendance-report tr {
+break-inside: avoid;
+}
 
-  .attendance-report .table-responsive {
-    overflow: visible;
-  }
+.attendance-report .table-responsive {
+overflow: visible;
+}
 }
